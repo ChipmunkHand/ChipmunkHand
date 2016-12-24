@@ -95,7 +95,8 @@ For the remaining bytes, the master sends nothing at all. The slave sends one by
 (note: the controller expects these bytes to be send least-signifcant-bit first. Our code above that converts the bytes to a bool list handles this simply by not reversing the output list)
 
 (note of a note: who cares if it is least signifant byte first? how would you even know when reverse engineering the protocol? you could equally call 0x41 0x82 and have done with it)
-Here is a very straight-forward imperative program to try this (note the original was way messier than this)
+
+Here is a very straight-forward imperative program to try this
 
 ```fsharp
 // send ATT to low "oh hai controller!"
@@ -129,7 +130,7 @@ Important things to note:
 
 A few problems needed solving here, then. Firstly, although you can set a clock speed, it is govenered by the rules imposed [here]( https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md). This means the closest we can get to 250khz or 500khz is 244khz or 488khz. Let's hope that won't be a problem!
 
-The second problem is that the Pi will send the byts most-significant-bit first which is the opposite of what we need.  It does have a way to flip this but apparently it does not work, so instead we wrote a function to flip a byte.
+The second problem is that the Pi will send the bytes most-significant-bit first which is the opposite of what we need.  It does have a way to flip this, but apparently it does not work (great!), so instead we wrote a function to flip a byte.
 
 ```fsharp
 let revByte =
@@ -153,7 +154,7 @@ let revByte =
 
 This was about the fourth version of it, many were written with varitions of loops and caching, really for not good reason at all.  This version does a manual reverse of a byte's bits and then calculates a lookup table with all the possible bytes in it.
 
-The last problem we encountered was that the ATT line was cycling after every byte, which apparently via lengthy experimentation, the pad did not like at all. This is not a big problem however since we can simply go back to cotrolling the ATT line like before.
+The last problem we encountered was that the ATT line was cycling after every byte, which apparently - via lengthy experimentation - the pad did not like at all. This is not a big problem however since we can simply go back to cotrolling the ATT line like before.
 
 ##Higher Level Constructs
 
@@ -209,7 +210,7 @@ write ATT false
     data
 ```
 
-Here we are controlling the ATT line over the whole operation. Notice that we can send a byte and form part of the result using `yield`.  We can also loop to recieve bytes, since for bytes 3, 4 and 5, the master simply sends 0x0 as it is only interested in the response.  The final cool bit here is that if the controller tells us is in analog mode in byte 2, this means it will be sending extra data for the analogue sticks, and we can read those as well within the same expression to be matched on later.
+Here we are controlling the ATT line over the whole operation. Notice that we can send a byte and form part of the result using `yield`.  We can also loop to recieve bytes, since for bytes 3, 4 and 5, the master simply sends 0x0 as it is only interested in the response.  The final cool bit (pun fully intended!) here is that if the controller tells us is in analog mode in byte 2, this means it will be sending extra data for the analogue sticks, and we can read those as well within the same expression to be matched on later.
 
 ##MailboxProcessor
 
@@ -234,10 +235,26 @@ let pad = new MailboxProcessor<int>(fun inbox ->
             //printer.Post "failed to read data"
             return! loop (delay)        
     }
-    loop 150)
+    loop 5)
 ```
 
-The above polls the pad every 150ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
+The above polls the pad every 5ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
+
+## Some exciting pictures !
+
+Behold! This is what the singals should look like when they are funcitoning as expected
+
+![](images/spi1.jpg)
+
+In the above image we have labelled the different signals. ATT is the attention line which is held low during the communication as seen in the code avove.  CLK is obivously the clock line which is used to shift the bits in and out of the master and slave.  CMD is the data being sent from the Pi, and DAT is the data being sent back from the pad.  Let's zoom in a bit here and see what is going on in each section.
+
+![](images/spi2.jpg)
+
+Here we can clearly see the initial byte of 0x1 being sent, followed by the 0x42 command to get data, whilst at the same time the pad is sending us back 0x41 to tell us it is in digital mode.  The server then sends 0x0 and recieves in kind 0x5A which is the packet indicating the controller is about to send us its two bytes of data.
+
+![](images/spi3.jpg)
+
+This final image shows the cotroller sending us two bytes of data indicating the buttons currently being pressed.  In this instance we are holding down the X button only which is reprsented by the one low bit of the second byte recieved.  After this, the ATT line is pulled high again to signal the end of the communcation.
 
 
 ##Next Steps
