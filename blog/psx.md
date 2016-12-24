@@ -239,6 +239,12 @@ let pad = new MailboxProcessor<int>(fun inbox ->
 
 The above polls the pad every 150ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
 
+## Some exciting pictures !
+
+Behold! This is what the singals should look like when they are funcitoning as expected
+
+![](images/spi1.jpg)
+
 
 ##Next Steps
 
