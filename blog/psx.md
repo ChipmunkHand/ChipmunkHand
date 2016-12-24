@@ -90,8 +90,6 @@ In the first byte we ignore what the slave says, we are just initiaing the commn
 
 For the remaining bytes, the master sends nothing at all. The slave sends one byte 0x5A which is it confirming it is about to send the data, and finally it sends two bytes that represent the state of the 16 digital buttons, on per bit,  with LOW being pressed.
 
-![oscilloscope](images/bla.png)
-
 (note: the controller expects these bytes to be send least-signifcant-bit first. Our code above that converts the bytes to a bool list handles this simply by not reversing the output list)
 
 (note of a note: who cares if it is least signifant byte first? how would you even know when reverse engineering the protocol? you could equally call 0x41 0x82 and have done with it)
@@ -178,7 +176,7 @@ match data with
 
 Here we state that the byte array must be 5 bytes long, we don't care what the first byte is, the second must match that of a digital pad. The third must equal 0x5A and then the final two bytes represent state of the 16 digital buttons ...Nice!
 
-![](https://media.giphy.com/media/3o85xxRWBFKcZH524o/giphy.gif)
+![](images/nice.gif)
 
 ###Array Comprehensions
 
@@ -238,7 +236,7 @@ let pad = new MailboxProcessor<int>(fun inbox ->
     loop 5)
 ```
 
-The above polls the pad every 5ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
+The above polls the pad every 5ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention )
 
 ## Some exciting pictures !
 
@@ -264,7 +262,14 @@ Unfortunately with the festive season and other great excuses, we did not get qu
 
 ##Conclusion
 
-Much fun was had by all.  Hopefully you can see how higher level languages can be employed to do very low level work whilst making use of higher level language features.
+We have beeen working on this for some time. Most of the time is trying something and seeing how it works (or more acurately how it doesn't work!), then trying to guess what went wrong and rinse-repeat until we can get it working - but that was to be expected. 
+Besides all that, it has been really exciting, especially for Andrea, because of the oscilloscope/logic analyzer and the capability to see the bits on the wire at relatively high frequencies. 
+What gets in the way of faster progress is the invisible yaks that require shaving. It is worth mentioning that the setup is rather delicate, sometimes you start exactly where you left it the last time and it is just not working for no apparent reason, which can be really quite confusing! Having said that this would be almost impossible without and oscilloscope.
 
+Hopefully you can see how F# is a language that is strangely suitable to do low level stuff as well as high level stuff, maybe Don is a Santa in disguise with a gift of a language that just keeps on giving.
 
-<r picture>
+### Code
+
+Liked this? Want to see it all the code? [Here it is](https://github.com/ChipmunkHand/ChipmunkHand/tree/master/Tools) (after a nice clean up)
+
+![](iamges/fluffy.png)
