@@ -260,7 +260,7 @@ This final image shows the cotroller sending us two bytes of data indicating the
 
 ##Next Steps
 
-Unfortunately with the festive season and other great excuses, we did not get quite as far as we would have liked with this. The pad is now reasonably giving us digital data back, although sometimes it drops out for several seconds, which is still a mystery. The original plan however was to use the pad's fabled "config mode" in order to force the pad into analogue mode and start giving us steady analog data back.  You can see some work towards this in the [repo](), but of course, many Yaks were presented for shaving, several of them seemingly invisible.  It is hard to shave invisible Yaks!
+Unfortunately with the festive season and other great excuses, we did not get quite as far as we would have liked with this. The pad is now reasonably giving us digital data back, although sometimes it drops out for several seconds, which is still a mystery. The original plan however was to use the pad's fabled "config mode" in order to force the pad into analogue mode and start giving us steady analog data back.  You can see some work towards this in the repo (link at the bottom), but of course, many Yaks were presented for shaving, several of them seemingly invisible.  It is hard to shave invisible Yaks!
 
 
 ##Conclusion
