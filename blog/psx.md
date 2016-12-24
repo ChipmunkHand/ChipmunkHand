@@ -30,7 +30,7 @@ The general format of communications goes as follows
 
 Now, since we have to send data out bit-by-bit we are going to need to write some functions to convert a byte to and from a sequence of HIGH/LOW (0/1, true/false) values.
 
-```
+```fsharp
 let convertToBits n =
     let mutable mask = 0b00000001
     [for i in 0 .. 7 do
@@ -168,7 +168,7 @@ These patterns look at a byte and match if they are equal to a given number.  In
 
 ```
 match data with
-            | [|_;IsDigital;0x5Auy;data1;data2|] ->
+| [|_;IsDigital;0x5Auy;data1;data2|] ->
 ```
 
 Here we state that the byte array must be 5 bytes long, we don't care what the first byte is, the second must match that of a digital pad.  The third must equal 0x5A and then the final two bytes represent state of the 16 digital buttons.  Pretty nice !
