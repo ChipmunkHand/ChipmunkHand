@@ -1,6 +1,7 @@
+![setup](images/setup.png)
 ##Introduction
 
-This post and work herein is by both [Andrea](https://twitter.com/silverSpoon) and [Ross](https://twitter.com/pezi_pink), but will be written in an odd first/third person style. This post is part of the F# advent calendar 2016.
+This post and work herein is by both [Andrea](https://twitter.com/silverSpoon) and [Ross](https://twitter.com/pezi_pink), but will be written in an odd first/third person style because collaboration i. This post is part of the [F# advent calendar 2016](https://sergeytihon.wordpress.com/2016/10/23/f-advent-calendar-in-english-2016/) you can also read it in [book form](https://www.gitbook.com/book/swlaschin/fsadvent-2016/details) thanks to [Scott Wlashin](https://twitter.com/ScottWlaschin/status/811611881123102721)'s efforts.
 
 In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announced hardware project, we have a requirement to use a controller.  We are currently using a Raspberry Pi 2 and would like to write most of the software, for the time being, in F#.  Now, Ross' blog already has some details on [using a NES pad](http://pinksquirrellabs.com/post/2013/07/04/Last-Fi.aspx), but for this project we are going to need way more buttons and analogue sticks, to this end, we settled on the wireless Playstation 2 Controller (henceforth known as PSX)
 
@@ -9,17 +10,17 @@ In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announc
 Sony never officially released the protocol specifications for their controller (of course not, that would be too easy). A quick search around the internet will yield various incomplete, conflicting documentation on how it works.  The top level concepts can be loosely explained as follows.
 
 * There is a master / slave relationship with the Playstation (Server) obviously being the master
-* The clock signal used to synchronise the two systems runs at a frighteningly fast pace,somehwere between 250khz-512khz (or maybe this is the difference between the PS1 and PS2, who knows)
+* The clock signal used to synchronise the two systems runs at a frighteningly fast pace,somehwere between 250khz-500khz (or maybe this is the difference between the PS1 and PS2, who knows)
 * Data is full duplex, this means the master and slave both send data to each other on the same clock cycle on two different lines
 * The controller has the capability to enter a configuration mode where you can tell it switch stuff on and off, such as the analogue sticks, the button pressure sensors and the rumble motors.
 
 ##Yakception
 
-Let's talk about speed quickly (see what we did there).  The clock cycle to keep the devices in sync is somewhere between 250 to 500 kilohertz.  1 hertz is one cycle per second, this means a rate of 500 kilohertz is equal to about 1 cycle every 4 microseconds(!).  Unfortunately being in a managed language on top of an operating system makes this rather difficult, the CLR only lets us delay at 1 millisecond at most, and even that is not guranteed due to the operating system scheduler.  Thankfully, using the pi we have access to a bunch of functions on the chip including a microsecond delay function, which is also not guranteed to do you what tell it to (that would also be too easy) and you might be lucky to get a delay lower than 80 microseconds.
+Let's talk about speed quickly (see what we did there, ha!). The clock cycle to keep the devices in sync is somewhere between 250 to 500 kilohertz. One hertz is one cycle per second, this means a rate of 500 kilohertz is equal to about 1 cycle every 4 microseconds(!).  Unfortunately being in a managed language on top of an operating system makes this rather difficult, the CLR only lets us delay at 1 millisecond at most, and even that is not guranteed due to the operating system scheduler. Thankfully, using The Pi, we have access to a bunch of functions on the chip including a microsecond delay function, which is also not guranteed to do what you tell it to (that would also be too easy) and you might be lucky to get a delay lower than 80 microseconds.
 
 Well, let's give it a go anyway. We are using a Lynxmotion wireless PSX controller, here is a schematic on how we hooked up the Pi to the PSX.
 
-<pic>
+![setup](images/psx-pi.png)
 
 The general format of communications goes as follows
 
@@ -47,9 +48,10 @@ let convertToNumber (xs: byte list) =
 ```
 
 
-Note we chose to use a byte of 0 or 1 to represent a bit, rather than a bool, simply because space is not an issue and converting between bools and bytes all the time gets tiring.
+Note we chose to use a byte of 0 or 1 to represent a bit, rather than a bool, simply because space is not an issue and converting between bools and bytes all the time gets ~tiring~.
 
-And of course we need a way to send a recieve a byte by exchanging 1 bit at a time via the clock cycle as outlined above.
+And of course we need a way to send a receive a byte by exchanging 1 bit at a time via the clock cycle as outlined above.
+
 ```fsharp
 let pulse() = delayUs 4UL
 
@@ -88,10 +90,12 @@ In the first byte we ignore what the slave says, we are just initiaing the commn
 
 For the remaining bytes, the master sends nothing at all. The slave sends one byte 0x5A which is it confirming it is about to send the data, and finally it sends two bytes that represent the state of the 16 digital buttons, on per bit,  with LOW being pressed.
 
+![oscilloscope](images/bla.png)
+
 (note: the controller expects these bytes to be send least-signifcant-bit first. Our code above that converts the bytes to a bool list handles this simply by not reversing the output list)
 
 (note of a note: who cares if it is least signifant byte first? how would you even know when reverse engineering the protocol? you could equally call 0x41 0x82 and have done with it)
-Here is a very straight-forward imperative program to try this (note the original one was way messier than this)
+Here is a very straight-forward imperative program to try this (note the original was way messier than this)
 
 ```fsharp
 // send ATT to low "oh hai controller!"
@@ -105,9 +109,9 @@ let r4 = sendByte (byte 0x0)
 write ATT true
 ```
 
-Did this work? Of course it didn't.  Occasionally we could get a message saying it had detected the 0x41 byte indicating the controler had told us it was in digital mode (woohoo!) but nothing other than that.  Something to be careful of here is writing to the console takes a very long time and messes the timing up, thas was taken into consideration too (not shown here).
+Did this work? Of course it didn't. Occasionally we could get a message saying it had detected the 0x41 byte indicating the controler had told us it was in digital mode (woohoo!) but nothing other than that (awww :( ).  Something to be careful of here is writing to the console takes a very long time and messes the timing up, thas was taken into consideration too (not shown here).
 
-Looking at what was going on with the oscilliscope and logic analyzer, we could see the clock cycle was all over the place - we expected that would be the case anyway, but was not sure how it would affect the controller.  Does the controller time out and reset itself? Were we doing something completely wrong?
+Looking at what was going on with the oscilliscope and logic analyzer, we could see the clock cycle was all over the shop - we expected that would be the case anyway, but was not sure how it would affect the controller.  Does the controller time out and reset itself? Were we doing something completely wrong?
 
 ##Further adventures in Yak land
 
@@ -115,7 +119,7 @@ Ah, behold the familiar fields of Yaks waiting to be shaved!  If our suspicions 
 
 ##SPI
 
-The Pi has hardware support for both the I2C and SPI serial protocols, we we were in luck.  After much messing around attempting to enable the SPI hardware support and testing that it actually works (We will omit those particular fields of Yak from this post) we were able to include a few new functions from the chipset library that enable us to send data over dedicated SPI pins on the Pi.
+The Pi has hardware support for both the I2C and SPI serial protocols, we were in luck.  After much messing around attempting to enable the SPI hardware support and testing that it actually works (We will omit those particular fields of Yak from this post) we were able to include a few new functions from the chipset library that enabled us to send data over dedicated SPI pins on the Pi.
 
 Important things to note:
 
@@ -123,7 +127,7 @@ Important things to note:
 * The Pi will deal with sending whole bytes, rather than bits, but only most-significant-bit first
 * With some testing, it was noted the ATT line is cycled after every byte (as the protocol is generally supposed to work)
 
-A few problems need solving here, then.  Firstly, although you can set a clock speed, it is govenered by the rules imposed [here]( https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md).  This means the closest we can get to 250khz or 500khz is 244khz or 488khz. Let's hope that won't be a problem!
+A few problems needed solving here, then. Firstly, although you can set a clock speed, it is govenered by the rules imposed [here]( https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md). This means the closest we can get to 250khz or 500khz is 244khz or 488khz. Let's hope that won't be a problem!
 
 The second problem is that the Pi will send the byts most-significant-bit first which is the opposite of what we need.  It does have a way to flip this but apparently it does not work, so instead we wrote a function to flip a byte.
 
@@ -149,11 +153,11 @@ let revByte =
 
 This was about the fourth version of it, many were written with varitions of loops and caching, really for not good reason at all.  This version does a manual reverse of a byte's bits and then calculates a lookup table with all the possible bytes in it.
 
-The last problem we encountered was that the ATT line was cycling after every byte, which apparently via lengthy experimentation, the pad did not like at all.  This is not a big problem however since we can simply go back to cotrolling the ATT line like before.
+The last problem we encountered was that the ATT line was cycling after every byte, which apparently via lengthy experimentation, the pad did not like at all. This is not a big problem however since we can simply go back to cotrolling the ATT line like before.
 
 ##Higher Level Constructs
 
-What, you may be thinking at this stage, is the point of using F# to do all these low level imperative operations? Wouldn't we be better off just writing it in C or something and have done with it?  Well, it turns out that F# has several features that make working with hardware quite nice.
+What you may be thinking at this stage is What is the point of using F# to do all these low level imperative operations? Wouldn't we be better off just writing it in C or something and have done with it?  Well, it turns out that F# has several features that make working with hardware quite nice.
 
 ###Active Patterns
 
@@ -171,11 +175,13 @@ match data with
 | [|_;IsDigital;0x5Auy;data1;data2|] ->
 ```
 
-Here we state that the byte array must be 5 bytes long, we don't care what the first byte is, the second must match that of a digital pad.  The third must equal 0x5A and then the final two bytes represent state of the 16 digital buttons.  Pretty nice !
+Here we state that the byte array must be 5 bytes long, we don't care what the first byte is, the second must match that of a digital pad. The third must equal 0x5A and then the final two bytes represent state of the 16 digital buttons ...Nice!
+
+![](https://media.giphy.com/media/3o85xxRWBFKcZH524o/giphy.gif)
 
 ###Array Comprehensions
 
-This was mentioned earlier, but now we are going to combine them with the functions from the chip that allow us the send SPI data.  The function is called `bcm2835_spi_transfer` which accepts a byte to send and returns the byte that it recieved in response.  Since the bytes need to be reversed, we can wrap this in a friendler function for our particular need
+This was mentioned earlier, but now we are going to combine them with the functions from the chip that allow us the send SPI data. The function is called `bcm2835_spi_transfer` which accepts a byte to send and returns the byte that it recieved in response.  Since the bytes need to be reversed, we can wrap this in a friendler function for our particular need
 ```fsharp
 let spi b = bcm2835_spi_transfer (revByte b) |> byte |> revByte
 ```
@@ -207,7 +213,7 @@ Here we are controlling the ATT line over the whole operation. Notice that we ca
 
 ##MailboxProcessor
 
-Finally, with all this stuff in place we still need a way to periodically poll the pad for the state of its buttons.  In order for the pad component to be re-usable it should be self-contained and deal with any threading concerns itself.  The MailboxProcessor is a great solution for this, using a nice trick with `tryRecieve` which effecitvely acts as a timed loop rather than really waiting on any messages
+Finally, with all this in place, we still need a way to periodically poll the pad for the state of its buttons.  In order for the pad component to be re-usable it should be self-contained and deal with any threading concerns itself. The MailboxProcessor is a great solution for this, using a nice trick with `tryRecieve` which effecitvely acts as a timed loop rather than really waiting on any messages
 
 ```fsharp
 let pad = new MailboxProcessor<int>(fun inbox -> 
@@ -231,12 +237,12 @@ let pad = new MailboxProcessor<int>(fun inbox ->
     loop 150)
 ```
 
-The above polls the pad evert 150ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention here[link])
+The above polls the pad every 150ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
 
 
 ##Next Steps
 
-Unfortunately what with the festive season and all, we did not get quite as far as we would have liked with this.  The pad is now reasonably giving us digital data back, although sometimes it drops out for several seconds, which is still a mystery. The original plan however was to use the pad's fabled "config mode" in order to force the pad into analogue mode and start giving us steady analog data back.  You can see some work towards this in the GitHub repo, but of course, many Yaks were presented for shaving, several of them seemingly invisible.  It is hard to shave invisible Yaks!
+Unfortunately with the festive season and other great excuses, we did not get quite as far as we would have liked with this. The pad is now reasonably giving us digital data back, although sometimes it drops out for several seconds, which is still a mystery. The original plan however was to use the pad's fabled "config mode" in order to force the pad into analogue mode and start giving us steady analog data back.  You can see some work towards this in the [repo](), but of course, many Yaks were presented for shaving, several of them seemingly invisible.  It is hard to shave invisible Yaks!
 
 
 ##Conclusion
