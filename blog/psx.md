@@ -9,7 +9,7 @@ In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announc
 Sony never officially released the protocol specifications for their controller (of course not, that would be too easy). A quick search around the internet will yield various incomplete, conflicting documentation on how it works.  The top level concepts can be loosely explained as follows.
 
 * There is a master / slave relationship with the Playstation (Server) obviously being the master
-* The clock signal used to synchronise the two systems runs at a frighteningly fast pace,somehwere between 250khz-500khz
+* The clock signal used to synchronise the two systems runs at a frighteningly fast pace,somehwere between 250khz-512khz (or maybe this is the difference between the PS1 and PS2, who knows)
 * Data is full duplex, this means the master and slave both send data to each other on the same clock cycle on two different lines
 * The controller has the capability to enter a configuration mode where you can tell it switch stuff on and off, such as the analogue sticks, the button pressure sensors and the rumble motors.
 
