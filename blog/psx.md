@@ -32,7 +32,7 @@ The general format of communications goes as follows
 * As the clock goes LOW, each device loads its next bit onto the relevant line.  The server sends data on the CMD line, whilst the slave sends data on the DAT line.  When the clock line goes HIGH, each side reads the bit they were sent, and the process continues
 * The Server pulls the ATT line HIGH again once it has finished.
 
-Now, since we have to send data out bit-by-bit we are going to need to write some functions to convert a byte to and from a sequence of HIGH/LOW (0/1, true/false) values.
+Now, since we have to send data out bit-by-bit we are going to need to write some functions to convert a byte to and from a sequence of HIGH/LOW (1/0, true/false) values.
 
 ```fsharp
 let convertToBits n =
