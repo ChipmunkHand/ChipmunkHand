@@ -53,7 +53,7 @@ let convertToNumber (xs: byte list) =
 
 Note we chose to use a byte of 0 or 1 to represent a bit, rather than a bool, simply because space is not an issue and converting between bools and bytes all the time gets ~tiring~
 
-And of course we need a way to send a receive a byte by exchanging 1 bit at a time via the clock cycle as outlined above.
+And of course we need a way to send and receive a byte by exchanging 1 bit at a time via the clock cycle as outlined above.
 
 ```fsharp
 let pulse() = delayUs 4UL
