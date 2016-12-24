@@ -243,7 +243,7 @@ The above polls the pad every 5ms.  Obviously this is a simplified example, the 
 
 ## Some exciting pictures !
 
-Behold! This is what the singals should look like when they are functioning as expected
+Behold! This is what the signals should look like when they are functioning as expected
 
 ![](images/spi1.jpg)
 
