@@ -275,4 +275,4 @@ Hopefully you can see how F# is a language that is strangely suitable to do low 
 
 Liked this? Want to see it all the code? [Here it is](https://github.com/ChipmunkHand/ChipmunkHand/tree/master/Tools) (after a nice clean up)
 
-![](iamges/fluffy.png)
+![](iamges/fluffy.jpg)
