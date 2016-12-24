@@ -95,7 +95,8 @@ For the remaining bytes, the master sends nothing at all. The slave sends one by
 (note: the controller expects these bytes to be send least-signifcant-bit first. Our code above that converts the bytes to a bool list handles this simply by not reversing the output list)
 
 (note of a note: who cares if it is least signifant byte first? how would you even know when reverse engineering the protocol? you could equally call 0x41 0x82 and have done with it)
-Here is a very straight-forward imperative program to try this (note the original was way messier than this)
+
+Here is a very straight-forward imperative program to try this
 
 ```fsharp
 // send ATT to low "oh hai controller!"
@@ -129,7 +130,7 @@ Important things to note:
 
 A few problems needed solving here, then. Firstly, although you can set a clock speed, it is govenered by the rules imposed [here]( https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md). This means the closest we can get to 250khz or 500khz is 244khz or 488khz. Let's hope that won't be a problem!
 
-The second problem is that the Pi will send the byts most-significant-bit first which is the opposite of what we need.  It does have a way to flip this but apparently it does not work, so instead we wrote a function to flip a byte.
+The second problem is that the Pi will send the bytes most-significant-bit first which is the opposite of what we need.  It does have a way to flip this, but apparently it does not work (great!), so instead we wrote a function to flip a byte.
 
 ```fsharp
 let revByte =
@@ -153,7 +154,7 @@ let revByte =
 
 This was about the fourth version of it, many were written with varitions of loops and caching, really for not good reason at all.  This version does a manual reverse of a byte's bits and then calculates a lookup table with all the possible bytes in it.
 
-The last problem we encountered was that the ATT line was cycling after every byte, which apparently via lengthy experimentation, the pad did not like at all. This is not a big problem however since we can simply go back to cotrolling the ATT line like before.
+The last problem we encountered was that the ATT line was cycling after every byte, which apparently - via lengthy experimentation - the pad did not like at all. This is not a big problem however since we can simply go back to cotrolling the ATT line like before.
 
 ##Higher Level Constructs
 
