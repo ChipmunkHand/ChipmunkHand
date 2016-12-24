@@ -1,7 +1,7 @@
 ![setup](images/setup.png)
 ##Introduction
 
-This post and work herein is by both [Andrea](https://twitter.com/silverSpoon) and [Ross](https://twitter.com/pezi_pink), but will be written in an odd first/third person style because collaboration i. This post is part of the [F# advent calendar 2016](https://sergeytihon.wordpress.com/2016/10/23/f-advent-calendar-in-english-2016/) you can also read it in [book form](https://www.gitbook.com/book/swlaschin/fsadvent-2016/details) thanks to [Scott Wlashin](https://twitter.com/ScottWlaschin/status/811611881123102721)'s efforts.
+This post and work herein is by both [Andrea](https://twitter.com/silverSpoon) and [Ross](https://twitter.com/pezi_pink), but will be written in an odd first/third person style because reasons. This post is part of the [F# advent calendar 2016](https://sergeytihon.wordpress.com/2016/10/23/f-advent-calendar-in-english-2016/) you can also read it in [book form](https://www.gitbook.com/book/swlaschin/fsadvent-2016/details) thanks to [Scott Wlashin](https://twitter.com/ScottWlaschin/status/811611881123102721)'s efforts.
 
 In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announced hardware project, we have a requirement to use a controller.  We are currently using a Raspberry Pi 2 and would like to write most of the software, for the time being, in F#.  Now, Ross' blog already has some details on [using a NES pad](http://pinksquirrellabs.com/post/2013/07/04/Last-Fi.aspx), but for this project we are going to need way more buttons and analogue sticks, to this end, we settled on the wireless Playstation 2 Controller (henceforth known as PSX)
 
