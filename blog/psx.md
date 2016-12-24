@@ -1,8 +1,8 @@
 ##Introduction
 
-This post and work herein is by both Andrea and Ross, but will be written in an odd first/third person style. This post is part of the F# advent calendar 2016.
+This post and work herein is by both [Andrea](https://twitter.com/silverSpoon) and [Ross](https://twitter.com/pezi_pink), but will be written in an odd first/third person style. This post is part of the F# advent calendar 2016.
 
-In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announced hardware project, we have a requirement to use a controller.  We are currently using a Raspberry Pi 2 and would like to write most of the software, for the time being, in F#.  Now, Ross' blog already has some details on using a NES pad <link>, but for this project we are going to need way more buttons and analogue sticks, to this end, we settled on the wireless Playstation 2 Controller (henceforth known as PSX)
+In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announced hardware project, we have a requirement to use a controller.  We are currently using a Raspberry Pi 2 and would like to write most of the software, for the time being, in F#.  Now, Ross' blog already has some details on [using a NES pad](http://pinksquirrellabs.com/post/2013/07/04/Last-Fi.aspx), but for this project we are going to need way more buttons and analogue sticks, to this end, we settled on the wireless Playstation 2 Controller (henceforth known as PSX)
 
 ##Detectives
 
@@ -111,7 +111,7 @@ Looking at what was going on with the oscilliscope and logic analyzer, we could 
 
 ##Further adventures in Yak land
 
-Ah, behold the familiar fields of Yaks waiting to be shaved!  If our suspicions were correct, and by looking at the signals on the logic analyzer, the 4us delay was no where near stable enough and the controller was getting confused.  However, so it transpires, the PSX pad is using a well known serial protocol called SPI which for some reason we did not notice.
+Ah, behold the familiar fields of Yaks waiting to be shaved!  If our suspicions were correct, and by looking at the signals on the logic analyzer, the 4us delay was no where near stable enough and the controller was getting confused.  However, so it transpires, the PSX pad is using a well known serial protocol called [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus) which for some reason we did not notice.
 
 ##SPI
 
@@ -123,7 +123,7 @@ Important things to note:
 * The Pi will deal with sending whole bytes, rather than bits, but only most-significant-bit first
 * With some testing, it was noted the ATT line is cycled after every byte (as the protocol is generally supposed to work)
 
-A few problems need solving here, then.  Firstly, although you can set a clock speed, it is govenered by the rules imposed here https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md.  This means the closest we can get to 250khz or 500khz is 244khz or 488khz. Let's hope that won't be a problem!
+A few problems need solving here, then.  Firstly, although you can set a clock speed, it is govenered by the rules imposed [here]( https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md).  This means the closest we can get to 250khz or 500khz is 244khz or 488khz. Let's hope that won't be a problem!
 
 The second problem is that the Pi will send the byts most-significant-bit first which is the opposite of what we need.  It does have a way to flip this but apparently it does not work, so instead we wrote a function to flip a byte.
 
