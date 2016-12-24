@@ -255,7 +255,7 @@ Here we can clearly see the initial byte of 0x1 being sent, followed by the 0x42
 
 ![](images/spi3.jpg)
 
-This final image shows the cotroller sending us two bytes of data indicating the buttons currently being pressed.  In this instance we are holding down the X button only which is reprsented by the one low bit of the second byte recieved.  After this, the ATT line is pulled high again to signal the end of the communcation.
+This final image shows the controller sending us two bytes of data indicating the buttons currently being pressed.  In this instance we are holding down the X button only which is reprsented by the one low bit of the second byte recieved.  After this, the ATT line is pulled high again to signal the end of the communcation.
 
 
 ##Next Steps
