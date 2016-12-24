@@ -50,7 +50,7 @@ let convertToNumber (xs: byte list) =
 Note we chose to use a byte of 0 or 1 to represent a bit, rather than a bool, simply because space is not an issue and converting between bools and bytes all the time gets tiring.
 
 And of course we need a way to send a recieve a byte by exchanging 1 bit at a time via the clock cycle as outlined above.
-```
+```fsharp
 let pulse() = delayUs 4UL
 
 let sendByte (b:byte) =
@@ -93,7 +93,7 @@ For the remaining bytes, the master sends nothing at all. The slave sends one by
 (note of a note: who cares if it is least signifant byte first? how would you even know when reverse engineering the protocol? you could equally call 0x41 0x82 and have done with it)
 Here is a very straight-forward imperative program to try this (note the original one was way messier than this)
 
-```
+```fsharp
 // send ATT to low "oh hai controller!"
 write ATT false
 sendByte (byte 0x1) |> ignore
@@ -127,7 +127,7 @@ A few problems need solving here, then.  Firstly, although you can set a clock s
 
 The second problem is that the Pi will send the byts most-significant-bit first which is the opposite of what we need.  It does have a way to flip this but apparently it does not work, so instead we wrote a function to flip a byte.
 
-```
+```fsharp
 let revByte =
     let rev (input:byte) =
         let mutable output = 0uy
@@ -159,14 +159,14 @@ What, you may be thinking at this stage, is the point of using F# to do all thes
 
 Since we are going to be dealing in arrays of bytes going backwards and forwards between the devices, we can use the combination of Active Patterns and pattern matching so very succinctly match on the streams of data. For example, we can define some partial active patterns like this
 
-```
+```fsharp
 let (|IsDigital|_|)     b = if b = 0x41uy then Some () else None
 let (|IsAnalogueRed|_|) b = if b = 0x73uy then Some () else None
 ```
 
 These patterns look at a byte and match if they are equal to a given number.  In the bytes we recieve back from the pad, the second byte is the pad telling us what mode it is in.  Thus, once we have extracted an array of bytes we can see if it is what we are interested in explicitly as follows:
 
-```
+```fsharp
 match data with
 | [|_;IsDigital;0x5Auy;data1;data2|] ->
 ```
@@ -176,11 +176,13 @@ Here we state that the byte array must be 5 bytes long, we don't care what the f
 ###Array Comprehensions
 
 This was mentioned earlier, but now we are going to combine them with the functions from the chip that allow us the send SPI data.  The function is called `bcm2835_spi_transfer` which accepts a byte to send and returns the byte that it recieved in response.  Since the bytes need to be reversed, we can wrap this in a friendler function for our particular need
-```let spi b = bcm2835_spi_transfer (revByte b) |> byte |> revByte```
+```fsharp
+let spi b = bcm2835_spi_transfer (revByte b) |> byte |> revByte
+```
 
 Now, to retrieve the data from the pad we can use this within the array comprehensions like so
 
-```
+```fsharp
 write ATT false     
    let data =
             [| 
@@ -207,7 +209,7 @@ Here we are controlling the ATT line over the whole operation. Notice that we ca
 
 Finally, with all this stuff in place we still need a way to periodically poll the pad for the state of its buttons.  In order for the pad component to be re-usable it should be self-contained and deal with any threading concerns itself.  The MailboxProcessor is a great solution for this, using a nice trick with `tryRecieve` which effecitvely acts as a timed loop rather than really waiting on any messages
 
-```
+```fsharp
 let pad = new MailboxProcessor<int>(fun inbox -> 
     let rec loop delay = async{
         let! _ = inbox.TryReceive delay        
