@@ -209,7 +209,7 @@ write ATT false
     data
 ```
 
-Here we are controlling the ATT line over the whole operation. Notice that we can send a byte and form part of the result using `yield`.  We can also loop to recieve bytes, since for bytes 3, 4 and 5, the master simply sends 0x0 as it is only interested in the response.  The final cool bit here is that if the controller tells us is in analog mode in byte 2, this means it will be sending extra data for the analogue sticks, and we can read those as well within the same expression to be matched on later.
+Here we are controlling the ATT line over the whole operation. Notice that we can send a byte and form part of the result using `yield`.  We can also loop to recieve bytes, since for bytes 3, 4 and 5, the master simply sends 0x0 as it is only interested in the response.  The final cool bit (pun fully intended!) here is that if the controller tells us is in analog mode in byte 2, this means it will be sending extra data for the analogue sticks, and we can read those as well within the same expression to be matched on later.
 
 ##MailboxProcessor
 
@@ -234,16 +234,26 @@ let pad = new MailboxProcessor<int>(fun inbox ->
             //printer.Post "failed to read data"
             return! loop (delay)        
     }
-    loop 150)
+    loop 5)
 ```
 
-The above polls the pad every 150ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
+The above polls the pad every 5ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
 
 ## Some exciting pictures !
 
 Behold! This is what the singals should look like when they are funcitoning as expected
 
 ![](images/spi1.jpg)
+
+In the above image we have labelled the different signals. ATT is the attention line which is held low during the communication as seen in the code avove.  CLK is obivously the clock line which is used to shift the bits in and out of the master and slave.  CMD is the data being sent from the Pi, and DAT is the data being sent back from the pad.  Let's zoom in a bit here and see what is going on in each section.
+
+![](images/spi2.jpg)
+
+Here we can clearly see the initial byte of 0x1 being sent, followed by the 0x42 command to get data, whilst at the same time the pad is sending us back 0x41 to tell us it is in digital mode.  The server then sends 0x0 and recieves in kind 0x5A which is the packet indicating the controller is about to send us its two bytes of data.
+
+![](images/spi3.jpg)
+
+This final image shows the cotroller sending us two bytes of data indicating the buttons currently being pressed.  In this instance we are holding down the X button only which is reprsented by the one low bit of the second byte recieved.  After this, the ATT line is pulled high again to signal the end of the communcation.
 
 
 ##Next Steps
