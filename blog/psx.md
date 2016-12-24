@@ -161,7 +161,8 @@ Since we are going to be dealing in arrays of bytes going backwards and forwards
 
 ```
 let (|IsDigital|_|)     b = if b = 0x41uy then Some () else None
-let (|IsAnalogueRed|_|) b = if b = 0x73uy then Some () else None```
+let (|IsAnalogueRed|_|) b = if b = 0x73uy then Some () else None
+```
 
 These patterns look at a byte and match if they are equal to a given number.  In the bytes we recieve back from the pad, the second byte is the pad telling us what mode it is in.  Thus, once we have extracted an array of bytes we can see if it is what we are interested in explicitly as follows:
 
