@@ -192,23 +192,23 @@ Now, to retrieve the data from the pad we can use this within the array comprehe
 
 ```fsharp
 write ATT false     
-   let data =
-            [| 
-                // prepare
-                yield spi 0x1uy
-                // get data
-                let mode = spi 0x42uy 
-                yield mode
-                // 0x5A and two data bytes
-                for x in 0..2 -> spi 0x0uy
-                match mode with
-                | IsAnalogueRed -> 
-                    // rest of analogue data
-                    for x in 0..3 -> spi 0x0uy
-                | _ -> ()
-            |] 
-    write ATT true
-    data
+let data =
+    [| 
+        // prepare
+        yield spi 0x1uy
+        // get data
+        let mode = spi 0x42uy 
+        yield mode
+        // 0x5A and two data bytes
+        for x in 0..2 -> spi 0x0uy
+        match mode with
+        | IsAnalogueRed -> 
+            // rest of analogue data
+            for x in 0..3 -> spi 0x0uy
+        | _ -> ()
+    |] 
+write ATT true
+data
 ```
 
 Here we are controlling the ATT line over the whole operation. Notice that we can send a byte and form part of the result using `yield`.  We can also loop to recieve bytes, since for bytes 3, 4 and 5, the master simply sends 0x0 as it is only interested in the response.  The final cool bit (pun fully intended!) here is that if the controller tells us is in analog mode in byte 2, this means it will be sending extra data for the analogue sticks, and we can read those as well within the same expression to be matched on later.
