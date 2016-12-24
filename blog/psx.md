@@ -8,10 +8,10 @@ In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announc
 
 Sony never officially released the protocol specifications for their controller (of course not, that would be too easy). A quick search around the internet will yield various incomplete, conflicting documentation on how it works.  The top level concepts can be loosely explained as follows.
 
-1) There is a master / slave relationship with the Playstation (Server) obviously being the master
-2) The clock signal used to synchronise the two systems runs at a frighteningly fast pace,somehwere between 250khz-500khz
-3) Data is full duplex, this means the master and slave both send data to each other on the same clock cycle on two different lines
-4) The controller has the capability to enter a configuration mode where you can tell it switch stuff on and off, such as the analogue sticks, the button pressure sensors and the rumble motors.
+* There is a master / slave relationship with the Playstation (Server) obviously being the master
+* The clock signal used to synchronise the two systems runs at a frighteningly fast pace,somehwere between 250khz-500khz
+* Data is full duplex, this means the master and slave both send data to each other on the same clock cycle on two different lines
+* The controller has the capability to enter a configuration mode where you can tell it switch stuff on and off, such as the analogue sticks, the button pressure sensors and the rumble motors.
 
 ##Yakception
 
@@ -23,10 +23,10 @@ Well, let's give it a go anyway. We are using a Lynxmotion wireless PSX controll
 
 The general format of communications goes as follows
 
-1) Server pulls the ATT (Attention!) line LOW.  This tells the controller that the serveris about to initialize communications with it
-2) Server begins the clock cycle by pulling LOW for 4us then HIGH for 4us and so on
-3) As the clock goes LOW, each device loads its next bit onto the relevant line.  The server sends data on the CMD line, whilst the slave sends data on the DAT line.  When the clock line goes HIGH, each side reads the bit they were sent, and the process continues
-4) The Server pulls the ATT line HIGH again once it has finished.
+* Server pulls the ATT (Attention!) line LOW.  This tells the controller that the serveris about to initialize communications with it
+* Server begins the clock cycle by pulling LOW for 4us then HIGH for 4us and so on
+* As the clock goes LOW, each device loads its next bit onto the relevant line.  The server sends data on the CMD line, whilst the slave sends data on the DAT line.  When the clock line goes HIGH, each side reads the bit they were sent, and the process continues
+* The Server pulls the ATT line HIGH again once it has finished.
 
 Now, since we have to send data out bit-by-bit we are going to need to write some functions to convert a byte to and from a sequence of HIGH/LOW (0/1, true/false) values.
 
@@ -119,9 +119,9 @@ The Pi has hardware support for both the I2C and SPI serial protocols, we we wer
 
 Important things to note:
 
-1) The Pi will automate the clock cycle for us at a given speed
-2) The Pi will deal with sending whole bytes, rather than bits, but only most-significant-bit first
-3) With some testing, it was noted the ATT line is cycled after every byte (as the protocol is generally supposed to work)
+* The Pi will automate the clock cycle for us at a given speed
+* The Pi will deal with sending whole bytes, rather than bits, but only most-significant-bit first
+* With some testing, it was noted the ATT line is cycled after every byte (as the protocol is generally supposed to work)
 
 A few problems need solving here, then.  Firstly, although you can set a clock speed, it is govenered by the rules imposed here https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md.  This means the closest we can get to 250khz or 500khz is 244khz or 488khz. Let's hope that won't be a problem!
 
