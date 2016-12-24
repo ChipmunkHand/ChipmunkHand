@@ -267,9 +267,9 @@ Unfortunately with the festive season and other great excuses, we did not get qu
 
 We have beeen working on this for some time. Most of the time is trying something and seeing how it works (or more accurately how it doesn't work!), then trying to guess what went wrong and rinse-repeat until we can get it working - but that was to be expected. 
 Besides all that, it has been really exciting, especially for Andrea, because of the oscilloscope/logic analyzer and the capability to see the bits on the wire at relatively high frequencies. 
-What gets in the way of faster progress is the invisible yaks that require shaving. It is worth mentioning that the setup is rather delicate, sometimes you start exactly where you left it the last time and it is just not working for no apparent reason, which can be really quite confusing! Having said that this would be almost impossible without and oscilloscope.
+What gets in the way of faster progress is the invisible yaks that require shaving. It is worth mentioning that the setup is rather delicate, sometimes you start exactly where you left it the last time and it is just not working for no apparent reason, which can be really quite confusing! Having said that this would be almost impossible without the oscilloscope.
 
-Hopefully you can see how F# is a language that is strangely suitable to do low level stuff as well as high level stuff, maybe Don is a Santa in disguise with a gift of a language that just keeps on giving.
+Hopefully you can see how F# is a language that is strangely suitable to do low level stuff as well as high level stuff, maybe Don is a Santa in disguise with a gift of a language that just keeps on giving!!!
 
 ### Code
 
