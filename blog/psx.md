@@ -1,7 +1,10 @@
 ![setup](images/setup.png)
+
+# When Playstation meets F\#, PSX |> Pi
+
 ##Introduction
 
-This post and work herein is by both [Andrea](https://twitter.com/silverSpoon) and [Ross](https://twitter.com/pezi_pink), but will be written in an odd first/third person style because reasons. This post is part of the [F# advent calendar 2016](https://sergeytihon.wordpress.com/2016/10/23/f-advent-calendar-in-english-2016/) you can also read it in [book form](https://www.gitbook.com/book/swlaschin/fsadvent-2016/details) thanks to [Scott Wlashin](https://twitter.com/ScottWlaschin/status/811611881123102721)'s efforts.
+This post and work herein is by both [Andrea](https://twitter.com/silverSpoon) and [Ross](https://twitter.com/pezi_pink), but will be written in an odd first/third person style because reasons :D. This post is part of the [F# advent calendar 2016](https://sergeytihon.wordpress.com/2016/10/23/f-advent-calendar-in-english-2016/) you can also read it in [book form](https://www.gitbook.com/book/swlaschin/fsadvent-2016/details) thanks to [Scott Wlashin](https://twitter.com/ScottWlaschin/status/811611881123102721)'s efforts.
 
 In our current super-secret yet not-very-secret but as-of-yet-mostly-not-announced hardware project, we have a requirement to use a controller.  We are currently using a Raspberry Pi 2 and would like to write most of the software, for the time being, in F#.  Now, Ross' blog already has some details on [using a NES pad](http://pinksquirrellabs.com/post/2013/07/04/Last-Fi.aspx), but for this project we are going to need way more buttons and analogue sticks, to this end, we settled on the wireless Playstation 2 Controller (henceforth known as PSX)
 
@@ -16,7 +19,7 @@ Sony never officially released the protocol specifications for their controller 
 
 ##Yakception
 
-Let's talk about speed quickly (see what we did there, ha!). The clock cycle to keep the devices in sync is somewhere between 250 to 500 kilohertz. One hertz is one cycle per second, this means a rate of 500 kilohertz is equal to about 1 cycle every 4 microseconds(!).  Unfortunately being in a managed language on top of an operating system makes this rather difficult, the CLR only lets us delay at 1 millisecond at most, and even that is not guranteed due to the operating system scheduler. Thankfully, using The Pi, we have access to a bunch of functions on the chip including a microsecond delay function, which is also not guranteed to do what you tell it to (that would also be too easy) and you might be lucky to get a delay lower than 80 microseconds.
+Let's talk about speed quickly (see what we did there, ha!). The clock cycle to keep the devices in sync is somewhere between 250 to 500 kilohertz. One hertz is one cycle per second, this means a rate of 500 kilohertz is equal to about 1 cycle every 4 microseconds(!).  Unfortunately being in a managed language on top of an operating system makes this rather difficult, the CLR only lets us delay at 1 millisecond at most, and even that is not guaranteed due to the operating system scheduler. Thankfully, using The Pi, we have access to a bunch of functions on the chip including a microsecond delay function, which is also not guaranteed to do what you tell it to (that would also be too easy) and you might be lucky to get a delay lower than 80 microseconds.
 
 Well, let's give it a go anyway. We are using a Lynxmotion wireless PSX controller, here is a schematic on how we hooked up the Pi to the PSX.
 
@@ -24,12 +27,12 @@ Well, let's give it a go anyway. We are using a Lynxmotion wireless PSX controll
 
 The general format of communications goes as follows
 
-* Server pulls the ATT (Attention!) line LOW.  This tells the controller that the serveris about to initialize communications with it
-* Server begins the clock cycle by pulling LOW for 4us then HIGH for 4us and so on
-* As the clock goes LOW, each device loads its next bit onto the relevant line.  The server sends data on the CMD line, whilst the slave sends data on the DAT line.  When the clock line goes HIGH, each side reads the bit they were sent, and the process continues
+* Server pulls the ATT (Attention!) line LOW.  This tells the controller that the server is about to initialize communications with it
+* Server begins the clock cycle by pulling CLK LOW for 4us then HIGH for 4us and so on
+* As the clock goes LOW, each device loads its next bit onto the relevant line.  The master sends data on the CMD line, whilst the slave sends data on the DAT line.  When the clock line goes HIGH, each side reads the bit they were sent, and the process continues
 * The Server pulls the ATT line HIGH again once it has finished.
 
-Now, since we have to send data out bit-by-bit we are going to need to write some functions to convert a byte to and from a sequence of HIGH/LOW (0/1, true/false) values.
+Now, since we have to send data out bit-by-bit we are going to need to write some functions to convert a byte to and from a sequence of HIGH/LOW (1/0, true/false) values.
 
 ```fsharp
 let convertToBits n =
@@ -48,9 +51,9 @@ let convertToNumber (xs: byte list) =
 ```
 
 
-Note we chose to use a byte of 0 or 1 to represent a bit, rather than a bool, simply because space is not an issue and converting between bools and bytes all the time gets ~tiring~.
+Note we chose to use a byte of 0 or 1 to represent a bit, rather than a bool, simply because space is not an issue and converting between bools and bytes all the time gets ~tiring~
 
-And of course we need a way to send a receive a byte by exchanging 1 bit at a time via the clock cycle as outlined above.
+And of course we need a way to send and receive a byte by exchanging 1 bit at a time via the clock cycle as outlined above.
 
 ```fsharp
 let pulse() = delayUs 4UL
@@ -60,13 +63,13 @@ let sendByte (b:byte) =
     [for x in bits do
         // pull clock low
         write CLK false 
-        // sned a HIGH or LOW depending on current bit
+        // send a HIGH or LOW depending on current bit
         write CMD (x = 1uy)            
         // wait 4us
         pulse()    
         // pull clock high   
         write CLK true
-        // read the recieved bit
+        // read the received bit
         let v = if read DAT then 1uy else 0uy
         // wait 4 us
         pulse()
@@ -86,15 +89,13 @@ It seems, from the ever reliable internet, the most simple thing you can do is t
 |4   	| 0x0  	| 0xFF 	|
 |5   	| 0x0  	| 0xFF 	|
 
-In the first byte we ignore what the slave says, we are just initiaing the commnunication, which seems to always be with 0x1.  The second byte tells the controller what to do, 0x42 tells it to send the states of the digital buttons.  At the same time, the controller sends us 0x41. This byte might be something else, and it is the controller telling us what sort of mode it is in (eg, digital, angalogue).
+In the first byte we ignore what the slave says, we are just initiating the communication, which seems to always be with 0x1.  The second byte tells the controller what to do, 0x42 tells it to send the states of the digital buttons.  At the same time, the controller sends us 0x41. This byte might be something else, and it is the controller telling us what sort of mode it is in (eg, digital, angalogue).
 
 For the remaining bytes, the master sends nothing at all. The slave sends one byte 0x5A which is it confirming it is about to send the data, and finally it sends two bytes that represent the state of the 16 digital buttons, on per bit,  with LOW being pressed.
 
-![oscilloscope](images/bla.png)
+(note: the controller expects these bytes to be sent least-signifcant-bit first. Our code above that converts the bytes to a bool list handles this simply by not reversing the output list)
 
-(note: the controller expects these bytes to be send least-signifcant-bit first. Our code above that converts the bytes to a bool list handles this simply by not reversing the output list)
-
-(note of a note: who cares if it is least signifant byte first? how would you even know when reverse engineering the protocol? you could equally call 0x41 0x82 and have done with it)
+(note of a note: who cares if it is least significant byte first? how would you even know when reverse engineering the protocol? you could equally call 0x41 0x82 and have done with it)
 
 Here is a very straight-forward imperative program to try this
 
@@ -110,13 +111,13 @@ let r4 = sendByte (byte 0x0)
 write ATT true
 ```
 
-Did this work? Of course it didn't. Occasionally we could get a message saying it had detected the 0x41 byte indicating the controler had told us it was in digital mode (woohoo!) but nothing other than that (awww :( ).  Something to be careful of here is writing to the console takes a very long time and messes the timing up, thas was taken into consideration too (not shown here).
+Did this work? Of course it didn't. Occasionally we could get a message saying it had detected the 0x41 byte indicating the controller had told us it was in digital mode (woohoo!) but nothing other than that (awww :( ).  Something to be careful of here is writing to the console takes a very long time and messes the timing up, thas was taken into consideration too (not shown here).
 
-Looking at what was going on with the oscilliscope and logic analyzer, we could see the clock cycle was all over the shop - we expected that would be the case anyway, but was not sure how it would affect the controller.  Does the controller time out and reset itself? Were we doing something completely wrong?
+Looking at what was going on with the oscilloscope and logic analyser, we could see the clock cycle was all over the shop - we expected that would be the case anyway, but was not sure how it would affect the controller.  Does the controller time out and reset itself? Were we doing something completely wrong?
 
 ##Further adventures in Yak land
 
-Ah, behold the familiar fields of Yaks waiting to be shaved!  If our suspicions were correct, and by looking at the signals on the logic analyzer, the 4us delay was no where near stable enough and the controller was getting confused.  However, so it transpires, the PSX pad is using a well known serial protocol called [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus) which for some reason we did not notice.
+Ah, behold the familiar fields of Yaks waiting to be shaved!  If our suspicions were correct, and by looking at the signals on the logic analyser, the 4us delay was no where near stable enough and the controller was getting confused.  However, so it transpires, the PSX pad is using a well known serial protocol called [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus) which for some reason we did not notice.
 
 ##SPI
 
@@ -152,17 +153,17 @@ let revByte =
     fun b -> lookup.[b]
 ```
 
-This was about the fourth version of it, many were written with varitions of loops and caching, really for not good reason at all.  This version does a manual reverse of a byte's bits and then calculates a lookup table with all the possible bytes in it.
+This was about the fourth version of it, many were written with variations of loops and caching, really for not good reason at all.  This version does a manual reverse of a byte's bits and then calculates a lookup table with all the possible bytes in it.
 
-The last problem we encountered was that the ATT line was cycling after every byte, which apparently - via lengthy experimentation - the pad did not like at all. This is not a big problem however since we can simply go back to cotrolling the ATT line like before.
+The last problem we encountered was that the ATT line was cycling after every byte, which apparently - via lengthy experimentation - the pad did not like at all. This was not a big problem however since we could simply go back to cotrolling the ATT line manually like before.
 
 ##Higher Level Constructs
 
-What you may be thinking at this stage is What is the point of using F# to do all these low level imperative operations? Wouldn't we be better off just writing it in C or something and have done with it?  Well, it turns out that F# has several features that make working with hardware quite nice.
+What you may be thinking at this stage is what is the point of using F# to do all these low level imperative operations? Wouldn't we be better off just writing it in C or something and have done with it?  Well, it turns out that F# has several features that make working with hardware quite nice.
 
 ###Active Patterns
 
-Since we are going to be dealing in arrays of bytes going backwards and forwards between the devices, we can use the combination of Active Patterns and pattern matching so very succinctly match on the streams of data. For example, we can define some partial active patterns like this
+Since we are going to be dealing in arrays of bytes going backwards and forwards between the devices, we can use the combination of Active Patterns and pattern matching to very succinctly match on the streams of data. For example, we can define some partial active patterns like this
 
 ```fsharp
 let (|IsDigital|_|)     b = if b = 0x41uy then Some () else None
@@ -178,7 +179,7 @@ match data with
 
 Here we state that the byte array must be 5 bytes long, we don't care what the first byte is, the second must match that of a digital pad. The third must equal 0x5A and then the final two bytes represent state of the 16 digital buttons ...Nice!
 
-![](https://media.giphy.com/media/3o85xxRWBFKcZH524o/giphy.gif)
+![](images/nice.gif)
 
 ###Array Comprehensions
 
@@ -191,30 +192,30 @@ Now, to retrieve the data from the pad we can use this within the array comprehe
 
 ```fsharp
 write ATT false     
-   let data =
-            [| 
-                // prepare
-                yield spi 0x1uy
-                // get data
-                let mode = spi 0x42uy 
-                yield mode
-                // 0x5A and two data bytes
-                for x in 0..2 -> spi 0x0uy
-                match mode with
-                | IsAnalogueRed -> 
-                    // rest of analogue data
-                    for x in 0..3 -> spi 0x0uy
-                | _ -> ()
-            |] 
-    write ATT true
-    data
+let data =
+    [| 
+        // prepare
+        yield spi 0x1uy
+        // get data
+        let mode = spi 0x42uy 
+        yield mode
+        // 0x5A and two data bytes
+        for x in 0..2 -> spi 0x0uy
+        match mode with
+        | IsAnalogueRed -> 
+            // rest of analogue data
+            for x in 0..3 -> spi 0x0uy
+        | _ -> ()
+    |] 
+write ATT true
+data
 ```
 
 Here we are controlling the ATT line over the whole operation. Notice that we can send a byte and form part of the result using `yield`.  We can also loop to recieve bytes, since for bytes 3, 4 and 5, the master simply sends 0x0 as it is only interested in the response.  The final cool bit (pun fully intended!) here is that if the controller tells us is in analog mode in byte 2, this means it will be sending extra data for the analogue sticks, and we can read those as well within the same expression to be matched on later.
 
 ##MailboxProcessor
 
-Finally, with all this in place, we still need a way to periodically poll the pad for the state of its buttons.  In order for the pad component to be re-usable it should be self-contained and deal with any threading concerns itself. The MailboxProcessor is a great solution for this, using a nice trick with `tryRecieve` which effecitvely acts as a timed loop rather than really waiting on any messages
+Finally, with all this in place, we still need a way to periodically poll the pad for the state of its buttons.  In order for the pad component to be re-usable it should be self-contained and deal with any threading concerns itself. The MailboxProcessor is a great solution for this, using a nice trick with `tryRecieve` which effectively acts as a timed loop rather than really waiting on any messages
 
 ```fsharp
 let pad = new MailboxProcessor<int>(fun inbox -> 
@@ -238,11 +239,11 @@ let pad = new MailboxProcessor<int>(fun inbox ->
     loop 5)
 ```
 
-The above polls the pad every 5ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implemention [here]())
+The above polls the pad every 5ms.  Obviously this is a simplified example, the real version would communicate the new data in some fashion, either by calling passed in functions or raising events of some description (this follows a pattern similar to the NES pad implementation )
 
 ## Some exciting pictures !
 
-Behold! This is what the singals should look like when they are funcitoning as expected
+Behold! This is what the signals should look like when they are functioning as expected
 
 ![](images/spi1.jpg)
 
@@ -254,17 +255,24 @@ Here we can clearly see the initial byte of 0x1 being sent, followed by the 0x42
 
 ![](images/spi3.jpg)
 
-This final image shows the cotroller sending us two bytes of data indicating the buttons currently being pressed.  In this instance we are holding down the X button only which is reprsented by the one low bit of the second byte recieved.  After this, the ATT line is pulled high again to signal the end of the communcation.
+This final image shows the controller sending us two bytes of data indicating the buttons currently being pressed.  In this instance we are holding down the X button only, which is reprsented by the one low bit of the second byte recieved.  After this, the ATT line is pulled high again to signal the end of the communication.
 
 
 ##Next Steps
 
-Unfortunately with the festive season and other great excuses, we did not get quite as far as we would have liked with this. The pad is now reasonably giving us digital data back, although sometimes it drops out for several seconds, which is still a mystery. The original plan however was to use the pad's fabled "config mode" in order to force the pad into analogue mode and start giving us steady analog data back.  You can see some work towards this in the [repo](), but of course, many Yaks were presented for shaving, several of them seemingly invisible.  It is hard to shave invisible Yaks!
+Unfortunately with the festive season and other great excuses, we did not get quite as far as we would have liked with this. The pad is now reasonably giving us digital data back, although sometimes it drops out for several seconds, which is still a mystery. The original plan however was to use the pad's fabled "config mode" in order to force the pad into analogue mode and start giving us steady analogue data back.  You can see some work towards this in the repo (link at the bottom), but of course, many Yaks were presented for shaving, several of them seemingly invisible.  It is hard to shave invisible Yaks!
 
 
 ##Conclusion
 
-Much fun was had by all.  Hopefully you can see how higher level languages can be employed to do very low level work whilst making use of higher level language features.
+We have beeen working on this for some time. Most of the time is trying something and seeing how it works (or more accurately how it doesn't work!), then trying to guess what went wrong and rinse-repeat until we can get it working - but that was to be expected. 
+Besides all that, it has been really exciting, especially for Andrea, because of the oscilloscope/logic analyzer and the capability to see the bits on the wire at relatively high frequencies. 
+What gets in the way of faster progress is the invisible yaks that require shaving. It is worth mentioning that the setup is rather delicate, sometimes you start exactly where you left it the last time and it is just not working for no apparent reason, which can be really quite confusing! Having said that this would be almost impossible without the oscilloscope.
 
+Hopefully you can see how F# is a language that is strangely suitable to do low level stuff as well as high level stuff, maybe Don is a Santa in disguise with a gift of a language that just keeps on giving!!!
 
-<r picture>
+### Code
+
+Liked this? Want to see it all the code? [Here it is](https://github.com/ChipmunkHand/ChipmunkHand/tree/master/Tools) (after a nice clean up)
+
+![](images/fluffy.jpg)
