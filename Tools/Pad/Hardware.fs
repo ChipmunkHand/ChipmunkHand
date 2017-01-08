@@ -34,7 +34,7 @@ let psxToPi psx =
     match psx with
     | PSX.DAT -> GPIOPins.Pin_11
     | PSX.CMD -> GPIOPins.Pin_16
-    | PSX.ATT -> GPIOPins.Pin_13
+    | PSX.ATT -> GPIOPins.Pin_22
     | PSX.CLK -> GPIOPins.Pin_15
 
 [<DllImport("libbcm2835.so", EntryPoint = "bcm2835_init")>]
@@ -55,6 +55,10 @@ extern int bcm2835_spi_begin()
 extern int bcm2835_spi_end()
 [<DllImport("libbcm2835.so", EntryPoint = "bcm2835_spi_setClockDivider")>]
 extern void bcm2835_spi_setClockDivider(uint16 divider)
+
+[<DllImport("libbcm2835.so", EntryPoint = "bcm2835_spi_setDataMode")>]
+extern void bcm2835_spi_setDataMode(uint8 mode)
+
 //Transfers one byte to and from the currently selected SPI slave. 
 //Asserts the currently selected CS pins (as previously set by bcm2835_spi_chipSelect) 
 // during the transfer. Clocks the 8 bit value out on MOSI, and simultaneously clocks 

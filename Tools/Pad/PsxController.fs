@@ -55,20 +55,13 @@ let readPad() =
                 let mode = spi 0x42uy 
                 yield mode
                 // 0x5A and two data bytes
-                //for x in 0..2 -> spi 0x0uy
-                yield spi 0x0uy
-                yield spi 0x1uy
-                yield spi 0xFFuy
-                match mode with
-                | IsDigital -> 
-                    printer.Post "is dig"
-                | IsConfigMode ->
-                    printer.Post "is config"
-                    // rest of analogue data
-                    for x in 0..3 -> spi 0x0uy
-                | _ ->   
-                    printer.Post "not digital, reading extra data"
-                    for x in 0..3 -> spi 0x0uy  
+                for x in 0..2 -> spi 0x0uy
+                for x in 0..3 -> spi 0x0uy
+//                match mode with
+//                | IsAnalogueRed -> 
+//                    // rest of analogue data
+//                    for x in 0..3 -> spi 0x0uy
+//                | _ -> ()
             |] 
         write ATT true
         data
@@ -78,10 +71,12 @@ let readPad() =
         if count > 0 then  
             let data = getData()
             match data with
-            | [|_;IsDigital;0x5Auy;data1;data2|] -> 
-                printer.Post "digi"
-                printer.Post (System.String.Format("\t\t1 {0:X2}", data1))
-                printer.Post (System.String.Format("\n\t\t2 {0:X2}", data2))
+            | [|_;IsDigital;0x5Auy;data1;data2;data3;data4;data5;data6|] -> 
+//                printer.Post "digi"
+                if data1 <> 0xFFuy || data2 <> 0xFFuy then 
+                    printer.Post "something pressed"
+//                printer.Post (System.String.Format("\t\t1 {0:X2}", data1))
+//                printer.Post (System.String.Format("\n\t\t2 {0:X2}", data2))
                 Some (Digital [|data1;data2|])
             | [|_;IsAnalogueRed;0x5Auy;data1;data2;data3;data4;data5;data6 |] as x -> 
                 printer.Post "analog"
@@ -97,7 +92,7 @@ let readPad() =
         else 
             None
     
-    aux 5
+    aux 1
 
 
 let setupPad() =
