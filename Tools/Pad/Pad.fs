@@ -58,19 +58,21 @@ let main args =
     fsel ATT true
     printfn "Enabled SPI.."  
     printfn "%A" res
+    
     bcm2835_spi_setClockDivider(uint16 512)    
     bcm2835_spi_setDataMode(uint8 2)
-//    pad.Start()
+
     let mutable continueLooping = true
     while continueLooping do
-        if Console.ReadLine() = "a" then
+        match Console.ReadLine() with
+        | "a" ->
             match readPad() with
             | Some(d) -> printfn "data!"
             | None -> printfn "no data"
-        elif Console.ReadLine() = "x" then
-            continueLooping <- false
+        | "x"  -> continueLooping <- false
+        | _ -> printfn "Use a for reading the pad or x for exit"
 
-    Console.ReadLine()
+    
     printfn "Disabling SPI.."
     let res2 = bcm2835_spi_end()
     printfn "%A" res2   
