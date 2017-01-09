@@ -39,10 +39,11 @@ let enableRumble = [|0x01uy;0x4Duy;0x00uy;0x00uy;0x01uy|]
 
 let sendCommand bytes delay =   
     write ATT false
-    let data = [| for x in bytes -> spi x |]            
+    let mutable bytess = bytes
+    let data = spiBytes bytess //[| for x in bytes -> spi x |]            
     write ATT true
     delayMs delay // wait a bit
-    data
+    bytess
 
 let readPad() = 
     let getData() =
@@ -50,13 +51,18 @@ let readPad() =
         let data =
             [| 
                 // prepare
-                yield spi 0x1uy
-                // get data
-                let mode = spi 0x42uy 
-                yield mode
+                // yield spi 0x1uy
+                // // get data\\
+                // let mode = spi 0x42uy 
+                // yield mode
                 // 0x5A and two data bytes
-                for x in 0..2 -> spi 0x0uy
-                for x in 0..3 -> spi 0x0uy
+                let x = 0x1uy:: 0x42uy ::  [for x in 0..5 -> 0x0uy]
+                printfn "data before: %A" x
+                
+                x |> List.toArray |> spiBytes //with spiBytes there is no result to this side-effecty expression
+                printfn "data after : %A" x
+                // for x in 0..2 -> spi 0x0uy
+                // for x in 0..3 -> spi 0x0uy
 //                match mode with
 //                | IsAnalogueRed -> 
 //                    // rest of analogue data

@@ -1,10 +1,37 @@
 ﻿[<AutoOpen>]
 module Hardware
 
+#nowarn "9" // unverifiable constructs
+#nowarn "51" // The address-of operator may result in non-verifiable code. Its use is restricted to passing byrefs to functions that require them
+
 // holds all the boring stuff to p/invoke the native code allowing access to chip functions
 // also pin mappings from the pi to the other hardware (controller, etc).
-
+open System
 open System.Runtime.InteropServices
+open Microsoft.FSharp.NativeInterop
+
+type NativeArray<'T when 'T : unmanaged>(ptr : nativeptr<'T>, len: int) =
+    member x.Ptr = ptr
+    [<NoDynamicInvocation>]
+    member inline x.Item 
+       with get n = NativePtr.get x.Ptr n
+       and  set n v = NativePtr.set x.Ptr n v
+    member x.Length = len
+
+
+type PinnedArray<'T when 'T : unmanaged>(narray: NativeArray<'T>, gch: GCHandle) =
+    [<NoDynamicInvocation>]
+    static member inline OfArray(arr: 'T[]) =
+        let gch = GCHandle.Alloc(box arr,GCHandleType.Pinned)
+        let ptr = &&arr.[0]
+        new PinnedArray<'T>(new NativeArray<_>(ptr, Array.length arr), gch)
+
+    member x.Ptr = narray.Ptr
+    member x.Free() = gch.Free()
+    member x.Length = uint32 narray.Length
+    member x.NativeArray = narray
+    interface System.IDisposable with 
+        member x.Dispose() = gch.Free()
 
 type GPIODirection =
     | In = 0
@@ -67,6 +94,13 @@ extern void bcm2835_spi_setDataMode(uint8 mode)
 [<DllImport("libbcm2835.so", EntryPoint = "bcm2835_spi_transfer")>]
 extern uint8 bcm2835_spi_transfer(uint8 value)
 
+(*Transfers any number of bytes to and from the currently selected SPI slave using bcm2835_spi_transfernb. 
+The returned data from the slave replaces the transmitted data in the buffer.  Parameters:
+[in,out] buffer: Buffer of bytes to send. Received bytes will replace the contents
+[in] len: Number of bytes in the buffer, and the number of bytes to send/received *)
+[<DllImport("libbcm2835.so", EntryPoint = "bcm2835_spi_transfern")>]
+extern unit bcm2835_spi_transfern(byte* buffer, uint32 lenght)
+
 
 
 // friendly wrappers 
@@ -76,3 +110,8 @@ let read pin = bcm2835_gpio_lev(pin)
 let delayMs (ms:int) = System.Threading.Thread.Sleep ms
 let delayUs us = bcm2835_delayMicroseconds us
 let spi b = bcm2835_spi_transfer (revByte b) |> byte |> revByte
+let spiBytes xs = 
+        let reverseXs = xs|> Array.map(revByte) 
+        let pa = PinnedArray.OfArray(reverseXs)
+        bcm2835_spi_transfern(pa.Ptr, pa.Length)
+    
